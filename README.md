@@ -1,6 +1,6 @@
 # creversi
 
-Reversi with C
+Reversi in C
 
 ## Requirements
 
