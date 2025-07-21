@@ -13,7 +13,6 @@
 //  | - - - - - - - - |
 //  | - - - - - - - - |
 //  +-----------------+
-#define GRID_NUM 8
 #define BOARD_LENGTH (GRID_NUM + 2)  // Board size with sentinels
 Disk board[BOARD_LENGTH * BOARD_LENGTH];
 
@@ -98,6 +97,19 @@ bool is_valid_move(const Disk disk, const int x, const int y) {
         (get_reversible_count_in_line(board, disk, x, y, TOP_LEFT) > 0));
 }
 
+// Find a valid move
+bool find_valid_move(const Disk disk) {
+    for (int i = 0; i < GRID_NUM; ++i) {
+        for (int j = 0; j < GRID_NUM; ++j) {
+            if (is_valid_move(disk, i, j)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 // Reverse disks on the board from (x, y) for a one direction
 static void reverse_disks_in_line(Disk *board, const Disk disk, const int x,
                                   const int y, const Direction dir) {
@@ -140,6 +152,20 @@ void put_disk(const Disk disk, const int x, const int y) {
     reverse_disks(board, disk, x, y);
 
     *pd = disk;
+}
+
+// Count the number of disks
+int count_disks(const Disk disk) {
+    int count = 0;
+
+    for (int i = (BOARD_LENGTH + 1);
+         i < (BOARD_LENGTH * BOARD_LENGTH - BOARD_LENGTH); ++i) {
+        if (board[i] == disk) {
+            ++count;
+        }
+    }
+
+    return count;
 }
 
 // Initialize the board

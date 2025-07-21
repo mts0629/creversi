@@ -10,13 +10,35 @@ Reversi in C
 
 ## Build
 
-```
+```bash
 $ make
 ```
 
 Program will be built as `build/creversi`.
 
-Output will 
+## Run
+
+```
+$ ./build/creversi
+    a b c d e f g h
+  +-----------------+
+1 | - - - - - - - - |
+2 | - - - - - - - - |
+3 | - - - * - - - - |
+4 | - - * O X - - - |
+5 | - - - X O * - - |
+6 | - - - - * - - - |
+7 | - - - - - - - - |
+8 | - - - - - - - - |
+  +-----------------+
+Black (X) turn > 
+```
+
+- Start from a black player
+- Valid moves are shown as `*`
+- Input is a coordinate in: `[col character][row index]` (`a0` - `h8`)
+    - Capital letters (`A` - `H`) can be used
+- Quit a game by `q`
 
 ## License
 
