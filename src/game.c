@@ -34,77 +34,69 @@ static void print_prompt(const Disk turn) {
     }
 }
 
-static char *get_input(void) {
+// Parse a string to (x, y) coordinate
+static void parse_to_xy(int *x, int *y, const char *buffer) {
+    *x = tolower(buffer[0]) - 'a' + 1;
+    *y = buffer[1] - '0';
+}
+
+// Get the player input
+static char *get_player_input(int *x, int *y, const Disk turn) {
     static char buffer[3 + 1];
 
     while (true) {
+        print_prompt(turn);
+
         fgets(buffer, sizeof(buffer), stdin);
 
-        // Skip redundant inputs
+        // Flush redundant input
         size_t len = strlen(buffer);
         if (buffer[len - 1] != '\n') {
-            while (getchar() != '\n') {
-            }
+            while (getchar() != '\n')
+                ;
         }
 
         // Remove '\n'
-        for (int i = 0; i < sizeof(buffer); ++i) {
+        for (size_t i = 0; i < sizeof(buffer); ++i) {
             if (buffer[i] == '\n') {
                 buffer[i] = '\0';
                 break;
             }
         }
 
+        // Validate a quit command ('q')
         if (strcmp(buffer, "q") == 0) {
             break;
         }
 
         if (strlen(buffer) == 2) {
-            if (isalpha(buffer[0])) {
-                if (isdigit(buffer[1]) && (buffer[1] > '0') &&
-                    (buffer[1] < '9')) {
-                    break;
-                }
+            int tx, ty;
+            parse_to_xy(&tx, &ty, buffer);
+
+            // Validate (x, y)
+            if ((tx >= 1) && (tx <= GRID_NUM) && (ty >= 1) &&
+                (ty <= GRID_NUM)) {
+                *x = tx;
+                *y = ty;
+                break;
             }
         }
 
-        printf("Invaid input: specify a0 (/A1) - h1 (/H1)\n");
+        printf(
+            "Invaid input: specify a coordinate as \"a1\"-\"h8\" "
+            "(\"A1\"-\"H8\")\n");
     }
 
     return buffer;
 }
 
-// Parse the player input
-static bool parse_input(int *x, int *y, const char *buffer) {
-    if (isalpha(buffer[0]) && isdigit(buffer[1])) {
-        // Convert to (x, y) coordinate
-        int tx = tolower(buffer[0]) - 'a' + 1;
-        int ty = buffer[1] - '0';
-
-        // Validate (x, y)
-        if ((tx >= 1) || (tx <= GRID_NUM) || (ty >= 1) || (ty <= GRID_NUM)) {
-            *x = tx;
-            *y = ty;
-            return true;
-        }
-    }
-
-    // 'q' is quit
-    if (tolower(buffer[0]) == 'q') {
-        return true;
-    }
-
-    return false;
-}
-
-void next_turn(void) {
+static void next_turn(void) {
     game.next = get_opposite(game.next);
     ++game.turn;
 }
 
 // Play a game
 bool play_game(void) {
-    // char buf[4];
     while (game.playable[0] || game.playable[1]) {
         // Check existing valid moves
         if (!find_valid_move(game.next)) {
@@ -119,23 +111,17 @@ bool play_game(void) {
 
         print_board(game.next);
 
-        print_prompt(game.next);
-
-        // Get a player input
-        char *buffer = get_input();
+        int x, y;
+        char *buffer = get_player_input(&x, &y, game.next);
 
         // Quit a game
         if (strcmp(buffer, "q") == 0) {
+            printf("Quit the game\n");
             break;
         }
 
-        int x, y;
-        if (!parse_input(&x, &y, buffer)) {
-            continue;
-        }
-
         if (!is_valid_move(game.next, x, y)) {
-            printf("Invalid move\n");
+            printf("Invalid move: cannot put at \"%s\"\n", buffer);
             continue;
         }
 
