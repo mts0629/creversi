@@ -14,7 +14,7 @@
 //  | - - - - - - - - |
 //  +-----------------+
 #define BOARD_LENGTH (GRID_NUM + 2)  // Board size with sentinels
-Disk board[BOARD_LENGTH * BOARD_LENGTH];
+static Disk board[BOARD_LENGTH * BOARD_LENGTH];
 
 // Get a disk at (x, y)
 static inline Disk *disk_at(Disk *board, const int x, const int y) {

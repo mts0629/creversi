@@ -6,23 +6,13 @@
 
 #include "board.h"
 
-// Game state
-typedef struct {
-    int turn;
-    Disk next;
-    bool playable[2];
-} Game;
-
-Game game;
+static Disk current;
 
 // Initialize the game
 void init_game(void) {
     init_board();
 
-    game.turn = 0;
-    game.next = BLACK;
-    game.playable[0] = true;
-    game.playable[1] = true;
+    current = BLACK;
 }
 
 // Print a prompt
@@ -41,7 +31,7 @@ static void parse_to_xy(int *x, int *y, const char *buffer) {
 }
 
 // Get the player input
-static char *get_player_input(int *x, int *y, const Disk turn) {
+static char *get_input(int *x, int *y, const Disk turn) {
     static char buffer[3 + 1];
 
     while (true) {
@@ -90,52 +80,46 @@ static char *get_player_input(int *x, int *y, const Disk turn) {
     return buffer;
 }
 
-static void next_turn(void) {
-    game.next = get_opposite(game.next);
-    ++game.turn;
-}
-
 // Play a game
 bool play_game(void) {
-    while (game.playable[0] || game.playable[1]) {
-        // Check existing valid moves
-        if (!find_valid_move(game.next)) {
-            game.playable[game.turn % 2] = false;
-            printf("Skip a turn\n");
+    while (true) {
+        if (!find_valid_move(current)) {
+            current = get_opposite(current);
 
-            next_turn();
-            continue;
+            if (!find_valid_move(current)) {
+                break;
+            }
+
+            printf("Pass\n");
         }
 
-        game.playable[game.turn % 2] = true;
-
-        print_board(game.next);
+        print_board(current);
 
         int x, y;
-        char *buffer = get_player_input(&x, &y, game.next);
+        char *buffer = get_input(&x, &y, current);
 
         // Quit a game
         if (strcmp(buffer, "q") == 0) {
             printf("Quit the game\n");
-            break;
+            return false;
         }
 
-        if (!is_valid_move(game.next, x, y)) {
+        if (!is_valid_move(current, x, y)) {
             printf("Invalid move: cannot put at \"%s\"\n", buffer);
             continue;
         }
 
-        put_disk(game.next, x, y);
+        put_disk(current, x, y);
 
-        next_turn();
+        current = get_opposite(current);
     }
 
-    return !game.playable[0] && !game.playable[1];
+    return true;
 }
 
 // Judge a game
 void judge_game(void) {
-    print_board(game.next);
+    print_board(current);
 
     int num_black = count_disks(BLACK);
     int num_white = count_disks(WHITE);
