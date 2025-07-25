@@ -2,17 +2,21 @@
 
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "board.h"
+#include "com.h"
 
 static Disk current;
+static Disk player;
 
 // Initialize the game
 void init_game(void) {
     init_board();
 
     current = BLACK;
+    player = BLACK;
 }
 
 // Print a prompt
@@ -24,10 +28,21 @@ static void print_prompt(const Disk turn) {
     }
 }
 
-// Parse a string to (x, y) coordinate
+// Parse a string of grid position ("a1" - "h8") to (x, y) coordinate
 static void parse_to_xy(int *x, int *y, const char *buffer) {
     *x = tolower(buffer[0]) - 'a' + 1;
     *y = buffer[1] - '0';
+}
+
+// Parse (x, y) to a string of grid position ("a1" - "h8")
+static char *parse_to_grid_str(const int x, const int y) {
+    static char buffer[3] = {0};
+
+    buffer[0] = 'a' + (x - 1);
+    buffer[1] = '0' + y;
+    buffer[2] = '\0';
+
+    return buffer;
 }
 
 // Get the player input
@@ -96,17 +111,24 @@ bool play_game(void) {
         print_board(current);
 
         int x, y;
-        char *buffer = get_input(&x, &y, current);
+        if (current == player) {
+            char *buffer = get_input(&x, &y, current);
 
-        // Quit a game
-        if (strcmp(buffer, "q") == 0) {
-            printf("Quit the game\n");
-            return false;
-        }
+            // Quit a game
+            if (strcmp(buffer, "q") == 0) {
+                printf("Quit the game\n");
+                return false;
+            }
 
-        if (!is_valid_move(current, x, y)) {
-            printf("Invalid move: cannot put at \"%s\"\n", buffer);
-            continue;
+            if (!is_valid_move(current, x, y)) {
+                printf("Invalid move: cannot put at \"%s\"\n", buffer);
+                continue;
+            }
+        } else {
+            get_com_move(&x, &y, current);
+
+            print_prompt(current);
+            printf("%s\n", parse_to_grid_str(x, y));
         }
 
         put_disk(current, x, y);
