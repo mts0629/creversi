@@ -9,14 +9,29 @@
 #include "com.h"
 
 static Disk current;
-static Disk player;
+static Disk player = BLACK;
+
+// Check equality of two strings
+static inline bool str_eq(const char *s1, const char *s2) {
+    return (strcmp(s1, s2) == 0);
+}
+
+// Parse commandline arguments
+void parse_args(const int argc, const char *argv[]) {
+    for (int i = 1; i < argc; ++i) {
+        if (str_eq("-b", argv[i])) {
+            player = BLACK;
+        } else if (str_eq("-w", argv[i])) {
+            player = WHITE;
+        }
+    }
+}
 
 // Initialize the game
 void init_game(void) {
     init_board();
 
     current = BLACK;
-    player = BLACK;
 }
 
 // Print a prompt
@@ -70,7 +85,7 @@ static char *get_input(int *x, int *y, const Disk turn) {
         }
 
         // Validate a quit command ('q')
-        if (strcmp(buffer, "q") == 0) {
+        if (str_eq(buffer, "q")) {
             break;
         }
 
@@ -115,7 +130,7 @@ bool play_game(void) {
             char *buffer = get_input(&x, &y, current);
 
             // Quit a game
-            if (strcmp(buffer, "q") == 0) {
+            if (str_eq(buffer, "q")) {
                 printf("Quit the game\n");
                 return false;
             }

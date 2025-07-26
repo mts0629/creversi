@@ -34,11 +34,18 @@ $ ./build/creversi
 Black (X) turn > 
 ```
 
-- Start from a black player
-- Valid moves are shown as `*`
-- Input is a coordinate in: `[col character][row index]` (`a0` - `h8`)
+### How to play
+
+- Start from a black (`X`), white (`O`) is next
+- Position of valid moves are shown as `*`
+- Input: coordinate in `[col. character (a-h)][row index (1-8)]` (`a1` - `h8`)
     - Capital letters (`A` - `H`) can be used
 - Quit a game by `q`
+
+### Command line optons
+
+- `-b`: set a player to black (default)
+- `-w`: set a player to white
 
 ## License
 
