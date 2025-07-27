@@ -28,7 +28,7 @@ void parse_args(const int argc, const char *argv[]) {
 }
 
 // Initialize the game
-void init_game(void) {
+static void init_game(void) {
     init_board();
 
     current = BLACK;
@@ -44,13 +44,13 @@ static void print_prompt(const Disk turn) {
 }
 
 // Parse a string of grid position ("a1" - "h8") to (x, y) coordinate
-static void parse_to_xy(int *x, int *y, const char *buffer) {
-    *x = tolower(buffer[0]) - 'a' + 1;
-    *y = buffer[1] - '0';
+static inline void parse_grid_str_to_xy(int *x, int *y, const char *str) {
+    *x = tolower(str[0]) - 'a' + 1;
+    *y = str[1] - '0';
 }
 
 // Parse (x, y) to a string of grid position ("a1" - "h8")
-static char *parse_to_grid_str(const int x, const int y) {
+static inline char *parse_xy_to_grid_str(const int x, const int y) {
     static char buffer[3] = {0};
 
     buffer[0] = 'a' + (x - 1);
@@ -91,7 +91,7 @@ static char *get_input(int *x, int *y, const Disk turn) {
 
         if (strlen(buffer) == 2) {
             int tx, ty;
-            parse_to_xy(&tx, &ty, buffer);
+            parse_grid_str_to_xy(&tx, &ty, buffer);
 
             // Validate (x, y)
             if ((tx >= 1) && (tx <= GRID_NUM) && (ty >= 1) &&
@@ -110,52 +110,8 @@ static char *get_input(int *x, int *y, const Disk turn) {
     return buffer;
 }
 
-// Play a game
-bool play_game(void) {
-    while (true) {
-        if (!find_valid_move(current)) {
-            current = get_opposite(current);
-
-            if (!find_valid_move(current)) {
-                break;
-            }
-
-            printf("Pass\n");
-        }
-
-        print_board(current);
-
-        int x, y;
-        if (current == player) {
-            char *buffer = get_input(&x, &y, current);
-
-            // Quit a game
-            if (str_eq(buffer, "q")) {
-                printf("Quit the game\n");
-                return false;
-            }
-
-            if (!is_valid_move(current, x, y)) {
-                printf("Invalid move: cannot put at \"%s\"\n", buffer);
-                continue;
-            }
-        } else {
-            get_com_move(&x, &y, current);
-
-            print_prompt(current);
-            printf("%s\n", parse_to_grid_str(x, y));
-        }
-
-        put_disk(current, x, y);
-
-        current = get_opposite(current);
-    }
-
-    return true;
-}
-
 // Judge a game
-void judge_game(void) {
+static void judge_game(void) {
     print_board(current);
 
     int num_black = count_disks(BLACK);
@@ -169,4 +125,51 @@ void judge_game(void) {
     } else {
         printf("Draw\n");
     }
+}
+
+// Play a game
+void play_game(void) {
+    init_game();
+
+    while (true) {
+        if (!find_valid_move(current)) {
+            current = get_opposite(current);
+
+            if (!find_valid_move(current)) {
+                break;
+            }
+
+            print_prompt(current);
+            printf("pass\n");
+        }
+
+        print_board(current);
+
+        int x, y;
+        if (current == player) {
+            char *buffer = get_input(&x, &y, current);
+
+            // Quit a game
+            if (str_eq(buffer, "q")) {
+                printf("Quit the game\n");
+                return;
+            }
+
+            if (!is_valid_move(current, x, y)) {
+                printf("Invalid move: cannot put at \"%s\"\n", buffer);
+                continue;
+            }
+        } else {
+            get_com_move(&x, &y, current);
+
+            print_prompt(current);
+            printf("%s\n", parse_xy_to_grid_str(x, y));
+        }
+
+        put_disk(current, x, y);
+
+        current = get_opposite(current);
+    }
+
+    judge_game();
 }

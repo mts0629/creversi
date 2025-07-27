@@ -1,13 +1,9 @@
 #include "game.h"
 
-int main(int argc, char *argv[]) {
+int main(const int argc, const char *argv[]) {
     parse_args(argc, argv);
 
-    init_game();
-
-    if (play_game()) {
-        judge_game();
-    }
+    play_game();
 
     return 0;
 }
