@@ -37,9 +37,9 @@ static void init_game(void) {
 // Print a prompt
 static void print_prompt(const Disk turn) {
     if (turn == BLACK) {
-        printf("Black (X) turn > ");
+        printf("Black (X) turn > \033[0K");
     } else {
-        printf("White (O) turn > ");
+        printf("White (O) turn > \033[0K");
     }
 }
 
@@ -103,8 +103,10 @@ static char *get_input(int *x, int *y, const Disk turn) {
         }
 
         printf(
-            "Invaid input: specify a coordinate as \"a1\"-\"h8\" "
-            "(\"A1\"-\"H8\")\n");
+            "\r\033[0K"
+            "Invalid input: specify a coordinate as \"a1\"-\"h8\" "
+            "(\"A1\"-\"H8\")"
+            "\033[1A\r");
     }
 
     return buffer;
@@ -147,17 +149,24 @@ void play_game(void) {
 
         int x, y;
         if (current == player) {
-            char *buffer = get_input(&x, &y, current);
+            while (true) {
+                char *buffer = get_input(&x, &y, current);
 
-            // Quit a game
-            if (str_eq(buffer, "q")) {
-                printf("Quit the game\n");
-                return;
-            }
+                // Quit a game
+                if (str_eq(buffer, "q")) {
+                    printf("Quit the game\n");
+                    return;
+                }
 
-            if (!is_valid_move(current, x, y)) {
-                printf("Invalid move: cannot put at \"%s\"\n", buffer);
-                continue;
+                if (is_valid_move(current, x, y)) {
+                    break;
+                }
+
+                printf(
+                    "\r\033[0K"
+                    "Invalid move: cannot put at \"%s\""
+                    "\033[1A\r",
+                    buffer);
             }
         } else {
             get_com_move(&x, &y, current);
