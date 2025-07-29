@@ -134,6 +134,8 @@ void play_game(void) {
     init_game();
 
     while (true) {
+        print_board(current);
+
         if (!find_valid_move(current)) {
             current = get_opposite(current);
 
@@ -143,14 +145,18 @@ void play_game(void) {
 
             print_prompt(current);
             printf("pass\n");
-        }
 
-        print_board(current);
+            // Rewind the cursor
+            printf("\r\033[12A");
+            continue;
+        }
 
         int x, y;
         if (current == player) {
             while (true) {
                 char *buffer = get_input(&x, &y, current);
+
+                printf("\r\033[0K");
 
                 // Quit a game
                 if (str_eq(buffer, "q")) {
@@ -163,7 +169,6 @@ void play_game(void) {
                 }
 
                 printf(
-                    "\r\033[0K"
                     "Invalid move: cannot put at \"%s\""
                     "\033[1A\r",
                     buffer);
@@ -171,13 +176,17 @@ void play_game(void) {
         } else {
             get_com_move(&x, &y, current);
 
+            printf("\n");
             print_prompt(current);
-            printf("%s\n", parse_xy_to_grid_str(x, y));
+            printf("%s", parse_xy_to_grid_str(x, y));
         }
 
         put_disk(current, x, y);
 
         current = get_opposite(current);
+
+        // Rewind the cursor
+        printf("\r\033[12A");
     }
 
     judge_game();
