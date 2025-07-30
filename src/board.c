@@ -21,80 +21,79 @@ static inline Disk *disk_at(Disk *board, const int x, const int y) {
     return &board[y * BOARD_LENGTH + x];
 }
 
-// Proceed a position (x, y) by the direction
-static void proceed_xy(int *x, int *y, const Direction dir) {
+// Proceed an index by the direction
+static int proceed_index(const Direction dir) {
     switch (dir) {
         case TOP:
-            (*y)--;
+            return -BOARD_LENGTH;
             break;
         case TOP_RIGHT:
-            (*x)++;
-            (*y)--;
+            return -(BOARD_LENGTH - 1);
             break;
         case RIGHT:
-            (*x)++;
+            return 1;
             break;
         case BOTTOM_RIGHT:
-            (*x)++;
-            (*y)++;
+            return (BOARD_LENGTH + 1);
             break;
         case BOTTOM:
-            (*y)++;
+            return BOARD_LENGTH;
             break;
         case BOTTOM_LEFT:
-            (*x)--;
-            (*y)++;
+            return (BOARD_LENGTH - 1);
             break;
         case LEFT:
-            (*x)--;
+            return -1;
             break;
         case TOP_LEFT:
-            (*x)--;
-            (*y)--;
+            return -(BOARD_LENGTH + 1);
             break;
         default:
+            return 0;
             break;
     }
 }
 
-// Get a reversible count of the move (x, y) for a one direction
+// Get a reversible count of the move for a one direction
 static int get_reversible_count_in_line(Disk *board, const Disk disk,
-                                        const int x, const int y,
-                                        const Direction dir) {
-    Disk opposite = get_opposite(disk);
-
-    Disk *pd = disk_at(board, x, y);
-    if (*pd != NONE) {
+                                        const int index, const Direction dir) {
+    if (board[index] != NONE) {
         return 0;
     }
 
-    int px = x, py = y;
-    proceed_xy(&px, &py, dir);
+    int cur_index = index + proceed_index(dir);
 
+    Disk opposite = get_opposite(disk);
     int count = 0;
-    while (*(pd = disk_at(board, px, py)) == opposite) {
+    while (board[cur_index] == opposite) {
         ++count;
-        proceed_xy(&px, &py, dir);
+        cur_index += proceed_index(dir);
     }
 
-    if (*pd != disk) {
+    if (board[cur_index] != disk) {
         return 0;
     }
 
     return count;
 }
 
+// Convert (x, y) to a grid index
+static inline int xy_to_grid_index(const int x, const int y) {
+    return y * BOARD_LENGTH + x;
+}
+
 // Check whether the move (x, y) is valid or not
 bool is_valid_move(const Disk disk, const int x, const int y) {
+    int index = xy_to_grid_index(x, y);
     return (
-        (get_reversible_count_in_line(board, disk, x, y, TOP) > 0) ||
-        (get_reversible_count_in_line(board, disk, x, y, TOP_RIGHT) > 0) ||
-        (get_reversible_count_in_line(board, disk, x, y, RIGHT) > 0) ||
-        (get_reversible_count_in_line(board, disk, x, y, BOTTOM_RIGHT) > 0) ||
-        (get_reversible_count_in_line(board, disk, x, y, BOTTOM) > 0) ||
-        (get_reversible_count_in_line(board, disk, x, y, BOTTOM_LEFT) > 0) ||
-        (get_reversible_count_in_line(board, disk, x, y, LEFT) > 0) ||
-        (get_reversible_count_in_line(board, disk, x, y, TOP_LEFT) > 0));
+        (get_reversible_count_in_line(board, disk, index, TOP) > 0) ||
+        (get_reversible_count_in_line(board, disk, index, TOP_RIGHT) > 0) ||
+        (get_reversible_count_in_line(board, disk, index, RIGHT) > 0) ||
+        (get_reversible_count_in_line(board, disk, index, BOTTOM_RIGHT) > 0) ||
+        (get_reversible_count_in_line(board, disk, index, BOTTOM) > 0) ||
+        (get_reversible_count_in_line(board, disk, index, BOTTOM_LEFT) > 0) ||
+        (get_reversible_count_in_line(board, disk, index, LEFT) > 0) ||
+        (get_reversible_count_in_line(board, disk, index, TOP_LEFT) > 0));
 }
 
 // Find a valid move
@@ -110,48 +109,45 @@ bool find_valid_move(const Disk disk) {
     return false;
 }
 
-// Reverse disks on the board from (x, y) for a one direction
-static void reverse_disks_in_line(Disk *board, const Disk disk, const int x,
-                                  const int y, const Direction dir) {
-    Disk opposite = get_opposite(disk);
-
-    int px = x, py = y;
-    if (get_reversible_count_in_line(board, disk, x, y, dir) == 0) {
+// Reverse disks on the board from a grid index to a one direction
+static void reverse_disks_in_line(Disk *board, const Disk disk, const int index,
+                                  const Direction dir) {
+    if (get_reversible_count_in_line(board, disk, index, dir) == 0) {
         return;
     }
 
-    proceed_xy(&px, &py, dir);
+    int cur_index = index + proceed_index(dir);
 
-    Disk *pd;
-    while (*(pd = disk_at(board, px, py)) == opposite) {
-        *pd = disk;
-        proceed_xy(&px, &py, dir);
+    Disk opposite = get_opposite(disk);
+    while (board[cur_index] == opposite) {
+        board[cur_index] = disk;
+        cur_index += proceed_index(dir);
     }
 }
 
-// Reverse disks on the board from (x, y)
-static void reverse_disks(Disk *board, const Disk disk, const int x,
-                          const int y) {
-    reverse_disks_in_line(board, disk, x, y, TOP);
-    reverse_disks_in_line(board, disk, x, y, TOP_RIGHT);
-    reverse_disks_in_line(board, disk, x, y, RIGHT);
-    reverse_disks_in_line(board, disk, x, y, BOTTOM_RIGHT);
-    reverse_disks_in_line(board, disk, x, y, BOTTOM);
-    reverse_disks_in_line(board, disk, x, y, BOTTOM_LEFT);
-    reverse_disks_in_line(board, disk, x, y, LEFT);
-    reverse_disks_in_line(board, disk, x, y, TOP_LEFT);
+// Reverse disks on the board from a grid index
+static void reverse_disks(Disk *board, const Disk disk, const int index) {
+    reverse_disks_in_line(board, disk, index, TOP);
+    reverse_disks_in_line(board, disk, index, TOP_RIGHT);
+    reverse_disks_in_line(board, disk, index, RIGHT);
+    reverse_disks_in_line(board, disk, index, BOTTOM_RIGHT);
+    reverse_disks_in_line(board, disk, index, BOTTOM);
+    reverse_disks_in_line(board, disk, index, BOTTOM_LEFT);
+    reverse_disks_in_line(board, disk, index, LEFT);
+    reverse_disks_in_line(board, disk, index, TOP_LEFT);
 }
 
 // Put a disk on the board
 void put_disk(const Disk disk, const int x, const int y) {
-    Disk *pd = disk_at(board, x, y);
-    if (*pd != NONE) {
+    int index = xy_to_grid_index(x, y);
+
+    if (board[index] != NONE) {
         return;
     }
 
-    reverse_disks(board, disk, x, y);
+    reverse_disks(board, disk, index);
 
-    *pd = disk;
+    board[index] = disk;
 }
 
 // Count the number of disks
