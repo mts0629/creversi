@@ -36,6 +36,6 @@ int count_disks(const Disk disk);
 
 void init_board(void);
 
-void print_board(const Disk next);
+void print_board(const Disk turn);
 
 #endif
