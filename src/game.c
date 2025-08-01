@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #include "board.h"
 #include "com.h"
@@ -32,6 +33,8 @@ static void init_game(void) {
     init_board();
 
     current = BLACK;
+
+    srand(time(NULL));
 }
 
 // Print a prompt
