@@ -140,14 +140,16 @@ void play_game(void) {
         print_board(current);
 
         if (!find_valid_move(current)) {
-            current = get_opposite(current);
+            Disk opposite = get_opposite(current);
 
-            if (!find_valid_move(current)) {
+            if (!find_valid_move(opposite)) {
                 break;
             }
 
             print_prompt(current);
             printf("pass\n");
+
+            current = opposite;
 
             // Rewind the cursor
             printf("\r\033[12A");
