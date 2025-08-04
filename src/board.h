@@ -6,31 +6,26 @@
 // Disk on the board
 typedef enum { NONE = 0, BLACK, WHITE, EDGE } Disk;
 
-// Search direction
-typedef enum {
-    TOP,
-    TOP_RIGHT,
-    RIGHT,
-    BOTTOM_RIGHT,
-    BOTTOM,
-    BOTTOM_LEFT,
-    LEFT,
-    TOP_LEFT
-} Direction;
-
 // Size of grid
 #define GRID_NUM 8
+// Board size with sentinels
+#define BOARD_LENGTH (GRID_NUM + 2)
+
+// Convert (x, y) to a grid index
+static inline int xy_to_index(const int x, const int y) {
+    return y * BOARD_LENGTH + x;
+}
 
 // Get an opposite color of the disk
 static inline Disk get_opposite(const Disk disk) {
     return (disk == BLACK) ? WHITE : BLACK;
 }
 
-bool is_valid_move(const Disk disk, const int x, const int y);
+bool is_valid_move(const Disk disk, const int index);
 
 bool find_valid_move(const Disk disk);
 
-void put_disk(const Disk disk, const int x, const int y);
+void put_disk(const Disk disk, const int index);
 
 int count_disks(const Disk disk);
 

@@ -8,7 +8,7 @@ void get_com_move(int *x, int *y, const Disk current) {
         *x = rand() % GRID_NUM + 1;
         *y = rand() % GRID_NUM + 1;
 
-        if (is_valid_move(current, *x, *y)) {
+        if (is_valid_move(current, xy_to_index(*x, *y))) {
             break;
         }
     }

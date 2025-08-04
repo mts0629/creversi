@@ -16,10 +16,17 @@
 #define BOARD_LENGTH (GRID_NUM + 2)  // Board size with sentinels
 static Disk board[BOARD_LENGTH * BOARD_LENGTH];
 
-// Get a disk at (x, y)
-static inline Disk *disk_at(const int x, const int y) {
-    return &board[y * BOARD_LENGTH + x];
-}
+// Search direction
+typedef enum {
+    TOP,
+    TOP_RIGHT,
+    RIGHT,
+    BOTTOM_RIGHT,
+    BOTTOM,
+    BOTTOM_LEFT,
+    LEFT,
+    TOP_LEFT
+} Direction;
 
 // Proceed an index by the direction
 static int proceed_index(const Direction dir) {
@@ -76,14 +83,8 @@ static int get_reversible_count_in_line(const Disk disk, const int index,
     return 0;
 }
 
-// Convert (x, y) to a grid index
-static inline int xy_to_grid_index(const int x, const int y) {
-    return y * BOARD_LENGTH + x;
-}
-
 // Check whether the move (x, y) is valid or not
-bool is_valid_move(const Disk disk, const int x, const int y) {
-    int index = xy_to_grid_index(x, y);
+bool is_valid_move(const Disk disk, const int index) {
     return ((get_reversible_count_in_line(disk, index, TOP) > 0) ||
             (get_reversible_count_in_line(disk, index, TOP_RIGHT) > 0) ||
             (get_reversible_count_in_line(disk, index, RIGHT) > 0) ||
@@ -98,7 +99,7 @@ bool is_valid_move(const Disk disk, const int x, const int y) {
 bool find_valid_move(const Disk disk) {
     for (int y = 1; y <= GRID_NUM; ++y) {
         for (int x = 1; x <= GRID_NUM; ++x) {
-            if (is_valid_move(disk, x, y)) {
+            if (is_valid_move(disk, xy_to_index(x, y))) {
                 return true;
             }
         }
@@ -135,9 +136,7 @@ static void reverse_disks(const Disk disk, const int index) {
 }
 
 // Put a disk on the board
-void put_disk(const Disk disk, const int x, const int y) {
-    int index = xy_to_grid_index(x, y);
-
+void put_disk(const Disk disk, const int index) {
     if (board[index] != NONE) {
         return;
     }
@@ -166,23 +165,23 @@ void init_board(void) {
     // Clear a playable area
     for (int y = 1; y <= GRID_NUM; ++y) {
         for (int x = 1; x <= GRID_NUM; ++x) {
-            *disk_at(x, y) = NONE;
+            board[xy_to_index(x, y)] = NONE;
         }
     }
 
     // Put edges
     for (int i = 0; i < BOARD_LENGTH; ++i) {
-        *disk_at(i, 0) = EDGE;
-        *disk_at(i, (GRID_NUM + 1)) = EDGE;
-        *disk_at(0, i) = EDGE;
-        *disk_at((GRID_NUM + 1), i) = EDGE;
+        board[xy_to_index(i, 0)] = EDGE;
+        board[xy_to_index(i, (GRID_NUM + 1))] = EDGE;
+        board[xy_to_index(0, i)] = EDGE;
+        board[xy_to_index((GRID_NUM + 1), i)] = EDGE;
     }
 
     // Put center disks
-    *disk_at(4, 4) = WHITE;
-    *disk_at(4, 5) = BLACK;
-    *disk_at(5, 4) = BLACK;
-    *disk_at(5, 5) = WHITE;
+    board[xy_to_index(4, 4)] = WHITE;
+    board[xy_to_index(4, 5)] = BLACK;
+    board[xy_to_index(5, 4)] = BLACK;
+    board[xy_to_index(5, 5)] = WHITE;
 }
 
 // Print the current board
@@ -198,12 +197,12 @@ void print_board(const Disk turn) {
         for (int x = 1; x <= GRID_NUM; ++x) {
             putchar(' ');
 
-            Disk d = *disk_at(x, y);
+            Disk d = board[xy_to_index(x, y)];
             if (d == BLACK) {
                 putchar('X');
             } else if (d == WHITE) {
                 putchar('O');
-            } else if (is_valid_move(turn, x, y)) {
+            } else if (is_valid_move(turn, xy_to_index(x, y))) {
                 putchar('*');
             } else {
                 putchar('-');

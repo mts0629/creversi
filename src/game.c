@@ -169,7 +169,7 @@ void play_game(void) {
                     return;
                 }
 
-                if (is_valid_move(current, x, y)) {
+                if (is_valid_move(current, xy_to_index(x, y))) {
                     break;
                 }
 
@@ -186,7 +186,7 @@ void play_game(void) {
             printf("%s", parse_xy_to_grid_str(x, y));
         }
 
-        put_disk(current, x, y);
+        put_disk(current, xy_to_index(x, y));
 
         current = get_opposite(current);
 
