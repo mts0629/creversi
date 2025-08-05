@@ -1,5 +1,6 @@
 #include "board.h"
 
+#include <ctype.h>
 #include <stdio.h>
 
 // 8x8 grid with sentinels
@@ -213,4 +214,21 @@ void print_board(const Disk turn) {
     }
 
     puts("  +-----------------+");
+}
+
+// Parse a string of grid position ("a1" - "h8") to (x, y) coordinate
+void get_xy(int *x, int *y, const char *str) {
+    *x = tolower(str[0]) - 'a' + 1;
+    *y = str[1] - '0';
+}
+
+// Parse (x, y) to a string of grid position ("a1" - "h8")
+char *get_pos_str(const int x, const int y) {
+    static char buffer[3] = {0};
+
+    buffer[0] = 'a' + (x - 1);
+    buffer[1] = '0' + y;
+    buffer[2] = '\0';
+
+    return buffer;
 }

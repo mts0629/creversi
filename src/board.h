@@ -33,4 +33,8 @@ void init_board(void);
 
 void print_board(const Disk turn);
 
+void get_xy(int *x, int *y, const char *str);
+
+char *get_pos_str(const int x, const int y);
+
 #endif

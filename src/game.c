@@ -46,23 +46,6 @@ static void print_prompt(const Disk turn) {
     }
 }
 
-// Parse a string of grid position ("a1" - "h8") to (x, y) coordinate
-static inline void parse_grid_str_to_xy(int *x, int *y, const char *str) {
-    *x = tolower(str[0]) - 'a' + 1;
-    *y = str[1] - '0';
-}
-
-// Parse (x, y) to a string of grid position ("a1" - "h8")
-static inline char *parse_xy_to_grid_str(const int x, const int y) {
-    static char buffer[3] = {0};
-
-    buffer[0] = 'a' + (x - 1);
-    buffer[1] = '0' + y;
-    buffer[2] = '\0';
-
-    return buffer;
-}
-
 // Get the player input
 static char *get_input(int *x, int *y, const Disk turn) {
     static char buffer[3 + 1];
@@ -94,7 +77,7 @@ static char *get_input(int *x, int *y, const Disk turn) {
 
         if (strlen(buffer) == 2) {
             int tx, ty;
-            parse_grid_str_to_xy(&tx, &ty, buffer);
+            get_xy(&tx, &ty, buffer);
 
             // Validate (x, y)
             if ((tx >= 1) && (tx <= GRID_NUM) && (ty >= 1) &&
@@ -183,7 +166,7 @@ void play_game(void) {
 
             printf("\n");
             print_prompt(current);
-            printf("%s", parse_xy_to_grid_str(x, y));
+            printf("%s", get_pos_str(x, y));
         }
 
         put_disk(current, xy_to_index(x, y));
