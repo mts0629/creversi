@@ -29,8 +29,8 @@ void parse_args(const int argc, const char *argv[]) {
 }
 
 // Initialize the game
-static void init_game(void) {
-    init_board();
+static void init_game(Board *board) {
+    init_board(board);
 
     current = BLACK;
 
@@ -99,11 +99,11 @@ static char *get_input(int *x, int *y, const Disk turn) {
 }
 
 // Judge a game
-static void judge_game(void) {
-    print_board(current);
+static void judge_game(const Board *board) {
+    print_board(board, current);
 
-    int num_black = count_disks(BLACK);
-    int num_white = count_disks(WHITE);
+    int num_black = count_disks(board, BLACK);
+    int num_white = count_disks(board, WHITE);
 
     printf("B:W=%d:%d\n", num_black, num_white);
     if (num_black > num_white) {
@@ -117,15 +117,17 @@ static void judge_game(void) {
 
 // Play a game
 void play_game(void) {
-    init_game();
+    Board board;
+
+    init_game(&board);
 
     while (true) {
-        print_board(current);
+        print_board(&board, current);
 
-        if (!find_valid_move(current)) {
+        if (!find_valid_move(&board, current)) {
             Disk opposite = get_opposite(current);
 
-            if (!find_valid_move(opposite)) {
+            if (!find_valid_move(&board, opposite)) {
                 break;
             }
 
@@ -152,7 +154,7 @@ void play_game(void) {
                     return;
                 }
 
-                if (is_valid_move(current, xy_to_index(x, y))) {
+                if (is_valid_move(&board, current, xy_to_index(x, y))) {
                     break;
                 }
 
@@ -162,14 +164,14 @@ void play_game(void) {
                     buffer);
             }
         } else {
-            get_com_move(&x, &y, current);
+            get_com_move(&board, &x, &y, current);
 
             printf("\n");
             print_prompt(current);
             printf("%s", get_pos_str(x, y));
         }
 
-        put_disk(current, xy_to_index(x, y));
+        put_disk(&board, current, xy_to_index(x, y));
 
         current = get_opposite(current);
 
@@ -177,5 +179,5 @@ void play_game(void) {
         printf("\r\033[12A");
     }
 
-    judge_game();
+    judge_game(&board);
 }

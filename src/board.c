@@ -15,7 +15,6 @@
 //  | - - - - - - - - |
 //  +-----------------+
 #define BOARD_LENGTH (GRID_NUM + 2)  // Board size with sentinels
-static Disk board[BOARD_LENGTH * BOARD_LENGTH];
 
 // Search direction
 typedef enum {
@@ -63,21 +62,21 @@ static int proceed_index(const Direction dir) {
 }
 
 // Get a reversible count of the move for a one direction
-static int get_reversible_count_in_line(const Disk disk, const int index,
-                                        const Direction dir) {
-    if (board[index] != NONE) {
+static int get_reversible_count_in_line(const Board *board, const Disk disk,
+                                        const int index, const Direction dir) {
+    if (board->grid[index] != NONE) {
         return 0;
     }
 
     int cur_index = index + proceed_index(dir);
     Disk opposite = get_opposite(disk);
     int count = 0;
-    while (board[cur_index] == opposite) {
+    while (board->grid[cur_index] == opposite) {
         ++count;
         cur_index += proceed_index(dir);
     }
 
-    if (board[cur_index] == disk) {
+    if (board->grid[cur_index] == disk) {
         return count;
     }
 
@@ -85,22 +84,23 @@ static int get_reversible_count_in_line(const Disk disk, const int index,
 }
 
 // Check whether the move (x, y) is valid or not
-bool is_valid_move(const Disk disk, const int index) {
-    return ((get_reversible_count_in_line(disk, index, TOP) > 0) ||
-            (get_reversible_count_in_line(disk, index, TOP_RIGHT) > 0) ||
-            (get_reversible_count_in_line(disk, index, RIGHT) > 0) ||
-            (get_reversible_count_in_line(disk, index, BOTTOM_RIGHT) > 0) ||
-            (get_reversible_count_in_line(disk, index, BOTTOM) > 0) ||
-            (get_reversible_count_in_line(disk, index, BOTTOM_LEFT) > 0) ||
-            (get_reversible_count_in_line(disk, index, LEFT) > 0) ||
-            (get_reversible_count_in_line(disk, index, TOP_LEFT) > 0));
+bool is_valid_move(const Board *board, const Disk disk, const int index) {
+    return (
+        (get_reversible_count_in_line(board, disk, index, TOP) > 0) ||
+        (get_reversible_count_in_line(board, disk, index, TOP_RIGHT) > 0) ||
+        (get_reversible_count_in_line(board, disk, index, RIGHT) > 0) ||
+        (get_reversible_count_in_line(board, disk, index, BOTTOM_RIGHT) > 0) ||
+        (get_reversible_count_in_line(board, disk, index, BOTTOM) > 0) ||
+        (get_reversible_count_in_line(board, disk, index, BOTTOM_LEFT) > 0) ||
+        (get_reversible_count_in_line(board, disk, index, LEFT) > 0) ||
+        (get_reversible_count_in_line(board, disk, index, TOP_LEFT) > 0));
 }
 
 // Find a valid move
-bool find_valid_move(const Disk disk) {
+bool find_valid_move(const Board *board, const Disk disk) {
     for (int y = 1; y <= GRID_NUM; ++y) {
         for (int x = 1; x <= GRID_NUM; ++x) {
-            if (is_valid_move(disk, xy_to_index(x, y))) {
+            if (is_valid_move(board, disk, xy_to_index(x, y))) {
                 return true;
             }
         }
@@ -110,50 +110,50 @@ bool find_valid_move(const Disk disk) {
 }
 
 // Reverse disks on the board from a grid index to a one direction
-static void reverse_disks_in_line(const Disk disk, const int index,
-                                  const Direction dir) {
-    if (get_reversible_count_in_line(disk, index, dir) == 0) {
+static void reverse_disks_in_line(Board *board, const Disk disk,
+                                  const int index, const Direction dir) {
+    if (get_reversible_count_in_line(board, disk, index, dir) == 0) {
         return;
     }
 
     int cur_index = index + proceed_index(dir);
     Disk opposite = get_opposite(disk);
-    while (board[cur_index] == opposite) {
-        board[cur_index] = disk;
+    while (board->grid[cur_index] == opposite) {
+        board->grid[cur_index] = disk;
         cur_index += proceed_index(dir);
     }
 }
 
 // Reverse disks on the board from a grid index
-static void reverse_disks(const Disk disk, const int index) {
-    reverse_disks_in_line(disk, index, TOP);
-    reverse_disks_in_line(disk, index, TOP_RIGHT);
-    reverse_disks_in_line(disk, index, RIGHT);
-    reverse_disks_in_line(disk, index, BOTTOM_RIGHT);
-    reverse_disks_in_line(disk, index, BOTTOM);
-    reverse_disks_in_line(disk, index, BOTTOM_LEFT);
-    reverse_disks_in_line(disk, index, LEFT);
-    reverse_disks_in_line(disk, index, TOP_LEFT);
+static void reverse_disks(Board *board, const Disk disk, const int index) {
+    reverse_disks_in_line(board, disk, index, TOP);
+    reverse_disks_in_line(board, disk, index, TOP_RIGHT);
+    reverse_disks_in_line(board, disk, index, RIGHT);
+    reverse_disks_in_line(board, disk, index, BOTTOM_RIGHT);
+    reverse_disks_in_line(board, disk, index, BOTTOM);
+    reverse_disks_in_line(board, disk, index, BOTTOM_LEFT);
+    reverse_disks_in_line(board, disk, index, LEFT);
+    reverse_disks_in_line(board, disk, index, TOP_LEFT);
 }
 
 // Put a disk on the board
-void put_disk(const Disk disk, const int index) {
-    if (board[index] != NONE) {
+void put_disk(Board *board, const Disk disk, const int index) {
+    if (board->grid[index] != NONE) {
         return;
     }
 
-    reverse_disks(disk, index);
+    reverse_disks(board, disk, index);
 
-    board[index] = disk;
+    board->grid[index] = disk;
 }
 
 // Count the number of disks
-int count_disks(const Disk disk) {
+int count_disks(const Board *board, const Disk disk) {
     int count = 0;
 
     for (int i = (BOARD_LENGTH + 1);
          i < (BOARD_LENGTH * BOARD_LENGTH - BOARD_LENGTH); ++i) {
-        if (board[i] == disk) {
+        if (board->grid[i] == disk) {
             ++count;
         }
     }
@@ -162,31 +162,31 @@ int count_disks(const Disk disk) {
 }
 
 // Initialize the board
-void init_board(void) {
+void init_board(Board *board) {
     // Clear a playable area
     for (int y = 1; y <= GRID_NUM; ++y) {
         for (int x = 1; x <= GRID_NUM; ++x) {
-            board[xy_to_index(x, y)] = NONE;
+            board->grid[xy_to_index(x, y)] = NONE;
         }
     }
 
     // Put edges
     for (int i = 0; i < BOARD_LENGTH; ++i) {
-        board[xy_to_index(i, 0)] = EDGE;
-        board[xy_to_index(i, (GRID_NUM + 1))] = EDGE;
-        board[xy_to_index(0, i)] = EDGE;
-        board[xy_to_index((GRID_NUM + 1), i)] = EDGE;
+        board->grid[xy_to_index(i, 0)] = WALL;
+        board->grid[xy_to_index(i, (GRID_NUM + 1))] = WALL;
+        board->grid[xy_to_index(0, i)] = WALL;
+        board->grid[xy_to_index((GRID_NUM + 1), i)] = WALL;
     }
 
     // Put center disks
-    board[xy_to_index(4, 4)] = WHITE;
-    board[xy_to_index(4, 5)] = BLACK;
-    board[xy_to_index(5, 4)] = BLACK;
-    board[xy_to_index(5, 5)] = WHITE;
+    board->grid[xy_to_index(4, 4)] = WHITE;
+    board->grid[xy_to_index(4, 5)] = BLACK;
+    board->grid[xy_to_index(5, 4)] = BLACK;
+    board->grid[xy_to_index(5, 5)] = WHITE;
 }
 
 // Print the current board
-void print_board(const Disk turn) {
+void print_board(const Board *board, const Disk turn) {
     // Col. index
     puts("    a b c d e f g h");
     puts("  +-----------------+");
@@ -198,12 +198,12 @@ void print_board(const Disk turn) {
         for (int x = 1; x <= GRID_NUM; ++x) {
             putchar(' ');
 
-            Disk d = board[xy_to_index(x, y)];
+            Disk d = board->grid[xy_to_index(x, y)];
             if (d == BLACK) {
                 putchar('X');
             } else if (d == WHITE) {
                 putchar('O');
-            } else if (is_valid_move(turn, xy_to_index(x, y))) {
+            } else if (is_valid_move(board, turn, xy_to_index(x, y))) {
                 putchar('*');
             } else {
                 putchar('-');
