@@ -120,6 +120,10 @@ static void reverse_disks_in_line(Board *board, const Disk disk,
     Disk opposite = get_opposite(disk);
     while (board->grid[cur_index] == opposite) {
         board->grid[cur_index] = disk;
+
+        --board->count[opposite];
+        ++board->count[disk];
+
         cur_index += proceed_index(dir);
     }
 }
@@ -145,20 +149,14 @@ void put_disk(Board *board, const Disk disk, const int index) {
     reverse_disks(board, disk, index);
 
     board->grid[index] = disk;
+
+    ++board->count[disk];
+    --board->count[NONE];
 }
 
 // Count the number of disks
 int count_disks(const Board *board, const Disk disk) {
-    int count = 0;
-
-    for (int i = (BOARD_LENGTH + 1);
-         i < (BOARD_LENGTH * BOARD_LENGTH - BOARD_LENGTH); ++i) {
-        if (board->grid[i] == disk) {
-            ++count;
-        }
-    }
-
-    return count;
+    return board->count[disk];
 }
 
 // Initialize the board
@@ -183,6 +181,10 @@ void init_board(Board *board) {
     board->grid[xy_to_index(4, 5)] = BLACK;
     board->grid[xy_to_index(5, 4)] = BLACK;
     board->grid[xy_to_index(5, 5)] = WHITE;
+
+    board->count[NONE] = 60;
+    board->count[BLACK] = 2;
+    board->count[WHITE] = 2;
 }
 
 // Print the current board

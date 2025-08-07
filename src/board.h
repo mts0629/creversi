@@ -13,6 +13,7 @@ typedef enum { NONE = 0, BLACK, WHITE, WALL } Disk;
 
 typedef struct {
     Disk grid[BOARD_LENGTH * BOARD_LENGTH];
+    int count[3];
 } Board;
 
 // Convert (x, y) to a grid index
