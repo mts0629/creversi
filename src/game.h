@@ -1,8 +1,7 @@
 #ifndef GAME_H
 #define GAME_H
 
-void parse_args(const int argc, const char *argv[]);
-
-void play_game(void);
+// Play the game
+void play_game(const int argc, const char *argv[]);
 
 #endif

@@ -9,144 +9,142 @@
 #include "board.h"
 #include "com.h"
 
-static Disk current;
-static Disk player = BLACK;
+// Game data
+typedef struct {
+    Disk player;
+    Disk current;
+    Board board;
+} Game;
 
 // Check equality of two strings
 static inline bool str_eq(const char *s1, const char *s2) {
     return (strcmp(s1, s2) == 0);
 }
 
-// Parse commandline arguments
-void parse_args(const int argc, const char *argv[]) {
-    for (int i = 1; i < argc; ++i) {
-        if (str_eq("-b", argv[i])) {
-            player = BLACK;
-        } else if (str_eq("-w", argv[i])) {
-            player = WHITE;
-        }
-    }
-}
-
 // Initialize the game
-static void init_game(Board *board) {
-    init_board(board);
+static void init_game(Game *game) {
+    init_board(&(game->board));
 
-    current = BLACK;
+    game->current = BLACK;
 
     srand(time(NULL));
 }
 
-// Print a prompt
-static void print_prompt(const Disk turn) {
-    if (turn == BLACK) {
-        printf("Black (X) turn > \033[0K");
-    } else {
-        printf("White (O) turn > \033[0K");
+// Check whether an input string is valid as a coordinate
+static bool is_valid_input(const char *buffer) {
+    if (strlen(buffer) == 2) {
+        if (isalpha(buffer[0]) &&
+            ((buffer[0] < 'i') || ((buffer[0] > 'z') && (buffer[0] < 'I'))) &&
+            isdigit(buffer[1]) && (buffer[1] > '0') && (buffer[1] < '9')) {
+            return true;
+        }
     }
+
+    return false;
 }
 
-// Get the player input
-static char *get_input(int *x, int *y, const Disk turn) {
+// Clear the current line
+static void clear_current_line(void) { printf("\r\033[0K"); }
+
+// Get a player input
+static char *get_input(const Disk turn) {
     static char buffer[3 + 1];
 
-    while (true) {
-        print_prompt(turn);
+    clear_current_line();
+    printf("%s turn > ", get_disk_str(turn));
 
-        fgets(buffer, sizeof(buffer), stdin);
+    fgets(buffer, sizeof(buffer), stdin);
 
-        // Flush redundant input
-        size_t len = strlen(buffer);
-        if (buffer[len - 1] != '\n') {
-            while (getchar() != '\n')
-                ;
-        }
+    // Flush redundant input
+    size_t len = strlen(buffer);
+    if (buffer[len - 1] != '\n') {
+        while (getchar() != '\n')
+            ;
+    }
 
-        // Remove '\n'
-        for (size_t i = 0; i < sizeof(buffer); ++i) {
-            if (buffer[i] == '\n') {
-                buffer[i] = '\0';
-                break;
-            }
-        }
-
-        // Validate a quit command ('q')
-        if (str_eq(buffer, "q")) {
+    // Remove '\n'
+    for (size_t i = 0; i < sizeof(buffer); ++i) {
+        if (buffer[i] == '\n') {
+            buffer[i] = '\0';
             break;
         }
-
-        if (strlen(buffer) == 2) {
-            int tx, ty;
-            get_xy(&tx, &ty, buffer);
-
-            // Validate (x, y)
-            if ((tx >= 1) && (tx <= GRID_NUM) && (ty >= 1) &&
-                (ty <= GRID_NUM)) {
-                *x = tx;
-                *y = ty;
-                break;
-            }
-        }
-
-        printf(
-            "\r\033[0K"
-            "Invalid input: specify a coordinate as \"a1\"-\"h8\" "
-            "(\"A1\"-\"H8\")"
-            "\033[1A\r");
     }
 
     return buffer;
 }
 
-// Judge a game
-static void judge_game(const Board *board) {
-    print_board(board, current);
+// Rewind the cursor
+static void rewind_cursor(void) { printf("\r\033[12A"); }
 
-    int num_black = count_disks(board, BLACK);
-    int num_white = count_disks(board, WHITE);
+// Judge a game
+static void judge_game(const Game *game) {
+    puts("");
+    clear_current_line();
+
+    int num_black = count_disks(&(game->board), BLACK);
+    int num_white = count_disks(&(game->board), WHITE);
 
     printf("B:W=%d:%d\n", num_black, num_white);
     if (num_black > num_white) {
-        printf("Black wins!\n");
+        printf("%s wins!\n", get_disk_str(BLACK));
     } else if (num_white > num_black) {
-        printf("White wins!\n");
+        printf("%s wins!\n", get_disk_str(WHITE));
     } else {
         printf("Draw\n");
     }
 }
 
-// Play a game
-void play_game(void) {
-    Board board;
+// Change a turn
+static void change_turn(Game *game) {
+    game->current = get_opposite(game->current);
+}
 
-    init_game(&board);
+// Back the line
+static void back_a_line(void) { printf("\033[1A\r"); }
+
+// Parse commandline arguments
+static void parse_args(Game *game, const int argc, const char *argv[]) {
+    game->player = BLACK;
+
+    for (int i = 1; i < argc; ++i) {
+        if (str_eq("-b", argv[i])) {
+            game->player = BLACK;
+        } else if (str_eq("-w", argv[i])) {
+            game->player = WHITE;
+        }
+    }
+}
+
+void play_game(const int argc, const char *argv[]) {
+    Game game;
+
+    parse_args(&game, argc, argv);
+
+    init_game(&game);
 
     while (true) {
-        print_board(&board, current);
+        print_board(&(game.board), game.current);
 
-        if (!find_valid_move(&board, current)) {
-            Disk opposite = get_opposite(current);
-
-            if (!find_valid_move(&board, opposite)) {
+        if (!find_valid_move(&(game.board), game.current)) {
+            if (!find_valid_move(&(game.board), get_opposite(game.current))) {
                 break;
             }
 
-            print_prompt(current);
-            printf("pass\n");
+            clear_current_line();
+            printf("%s turn > pass", get_disk_str(game.current));
 
-            current = opposite;
+            change_turn(&game);
 
-            // Rewind the cursor
-            printf("\r\033[12A");
+            rewind_cursor();
             continue;
         }
 
-        int x, y;
-        if (current == player) {
+        int index;
+        if (game.current == game.player) {
             while (true) {
-                char *buffer = get_input(&x, &y, current);
+                char *buffer = get_input(game.current);
 
-                printf("\r\033[0K");
+                clear_current_line();
 
                 // Quit a game
                 if (str_eq(buffer, "q")) {
@@ -154,30 +152,39 @@ void play_game(void) {
                     return;
                 }
 
-                if (is_valid_move(&board, current, xy_to_index(x, y))) {
-                    break;
+                if (is_valid_input(buffer)) {
+                    index = get_index_from_pos_str(buffer);
+
+                    if (is_valid_move(&(game.board), game.current, index)) {
+                        break;
+                    }
+
+                    printf("Invalid move: cannot put at \"%s\"", buffer);
+                    back_a_line();
+
+                    continue;
                 }
 
+                clear_current_line();
+
                 printf(
-                    "Invalid move: cannot put at \"%s\""
-                    "\033[1A\r",
-                    buffer);
+                    "Invalid input: specify a coordinate as \"a1\"-\"h8\" "
+                    "(\"A1\"-\"H8\")");
+                back_a_line();
             }
         } else {
-            get_com_move(&board, &x, &y, current);
+            index = get_com_move(&(game.board), game.current);
 
-            printf("\n");
-            print_prompt(current);
-            printf("%s", get_pos_str(x, y));
+            printf("\n%s turn > %s", get_disk_str(game.current),
+                   get_pos_str(index));
         }
 
-        put_disk(&board, current, xy_to_index(x, y));
+        put_disk(&(game.board), game.current, index);
 
-        current = get_opposite(current);
+        change_turn(&game);
 
-        // Rewind the cursor
-        printf("\r\033[12A");
+        rewind_cursor();
     }
 
-    judge_game(&board);
+    judge_game(&game);
 }

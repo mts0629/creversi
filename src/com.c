@@ -2,14 +2,20 @@
 
 #include <stdlib.h>
 
-void get_com_move(Board *board, int *x, int *y, const Disk current) {
+int get_com_move(Board *board, const Disk current) {
+    int index;
+
     while (true) {
         // [TODD] implement a game AI
-        *x = rand() % GRID_NUM + 1;
-        *y = rand() % GRID_NUM + 1;
+        int x = rand() % GRID_NUM + 1;
+        int y = rand() % GRID_NUM + 1;
 
-        if (is_valid_move(board, current, xy_to_index(*x, *y))) {
+        index = get_index_from_xy(x, y);
+
+        if (is_valid_move(board, current, index)) {
             break;
         }
     }
+
+    return index;
 }
