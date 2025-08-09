@@ -136,6 +136,26 @@ bool find_valid_move(const Board *board, const Disk disk) {
     return false;
 }
 
+int get_valid_moves(int *valid_moves, const Board *board, const Disk disk) {
+    int n = 0;
+
+    for (int index = (BOARD_LENGTH + 1);
+         index < ((BOARD_LENGTH * BOARD_LENGTH) - BOARD_LENGTH); ++index) {
+        if (board->grid[index] != NONE) {
+            continue;
+        }
+
+        if (is_valid_move(board, disk, index)) {
+            valid_moves[n] = index;
+            ++n;
+        }
+    }
+
+    valid_moves[n] = -1;
+
+    return n;
+}
+
 // Flip disks on the board from a grid index to a one direction
 static void flip_disks_in_line(Board *board, const Disk disk, const int index,
                                const Direction dir) {

@@ -13,12 +13,27 @@
 typedef struct {
     Disk player;
     Disk current;
+    int num_valid_moves[3];
+    int valid_moves[3][60];
     Board board;
 } Game;
 
 // Check equality of two strings
 static inline bool str_eq(const char *s1, const char *s2) {
     return (strcmp(s1, s2) == 0);
+}
+
+// Parse commandline arguments
+static void parse_args(Game *game, const int argc, const char *argv[]) {
+    game->player = BLACK;
+
+    for (int i = 1; i < argc; ++i) {
+        if (str_eq("-b", argv[i])) {
+            game->player = BLACK;
+        } else if (str_eq("-w", argv[i])) {
+            game->player = WHITE;
+        }
+    }
 }
 
 // Initialize the game
@@ -102,17 +117,12 @@ static void change_turn(Game *game) {
 // Back the line
 static void back_a_line(void) { printf("\033[1A\r"); }
 
-// Parse commandline arguments
-static void parse_args(Game *game, const int argc, const char *argv[]) {
-    game->player = BLACK;
-
-    for (int i = 1; i < argc; ++i) {
-        if (str_eq("-b", argv[i])) {
-            game->player = BLACK;
-        } else if (str_eq("-w", argv[i])) {
-            game->player = WHITE;
-        }
-    }
+// Update valid moves
+static void update_valid_moves(Game *game) {
+    game->num_valid_moves[BLACK] =
+        get_valid_moves(game->valid_moves[BLACK], &(game->board), BLACK);
+    game->num_valid_moves[WHITE] =
+        get_valid_moves(game->valid_moves[WHITE], &(game->board), WHITE);
 }
 
 void play_game(const int argc, const char *argv[]) {
@@ -123,10 +133,12 @@ void play_game(const int argc, const char *argv[]) {
     init_game(&game);
 
     while (true) {
+        update_valid_moves(&game);
+
         print_board(&(game.board), game.current);
 
-        if (!find_valid_move(&(game.board), game.current)) {
-            if (!find_valid_move(&(game.board), get_opposite(game.current))) {
+        if (game.num_valid_moves[game.current] == 0) {
+            if (game.num_valid_moves[get_opposite(game.current)] == 0) {
                 break;
             }
 

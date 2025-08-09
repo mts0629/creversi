@@ -42,6 +42,9 @@ bool is_valid_move(const Board *board, const Disk disk, const int index);
 // Find a valid move
 bool find_valid_move(const Board *board, const Disk disk);
 
+// Get valid moves
+int get_valid_moves(int *valid_moves, const Board *board, const Disk disk);
+
 // Put a disk on the board
 void put_disk(Board *board, const Disk disk, const int index);
 
