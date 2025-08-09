@@ -25,11 +25,10 @@ int get_index_from_pos_str(const char *str) {
 }
 
 char *get_pos_str(const int index) {
-    static char buffer[3] = {0};
+    static char buffer[3] = {"\0\0\0"};
 
-    buffer[0] = 'a' + (index / BOARD_LENGTH - 1);
-    buffer[1] = '0' + (index % BOARD_LENGTH);
-    buffer[2] = '\0';
+    buffer[0] = 'a' + (index % BOARD_LENGTH - 1);
+    buffer[1] = '0' + (index / BOARD_LENGTH);
 
     return buffer;
 }
