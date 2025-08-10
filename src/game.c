@@ -143,7 +143,7 @@ void play_game(const int argc, const char *argv[]) {
             }
 
             clear_current_line();
-            printf("%s turn > pass", get_disk_str(game.current));
+            printf("%s turn > pass\n", get_disk_str(game.current));
 
             change_turn(&game);
 
@@ -185,7 +185,7 @@ void play_game(const int argc, const char *argv[]) {
                 back_a_line();
             }
         } else {
-            index = get_com_move(&(game.board), game.current);
+            index = get_com_next_move(&(game.board), game.current, 3);
 
             printf("\n%s turn > %s", get_disk_str(game.current),
                    get_pos_str(index));

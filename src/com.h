@@ -3,7 +3,7 @@
 
 #include "board.h"
 
-// Get a move of computer
-int get_com_move(Board *board, const Disk current);
+// Get the next move of computer
+int get_com_next_move(const Board *board, const Disk current, const int depth);
 
 #endif
