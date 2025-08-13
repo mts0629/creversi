@@ -32,6 +32,8 @@ static void parse_args(Game *game, const int argc, const char *argv[]) {
             game->player = BLACK;
         } else if (str_eq("-w", argv[i])) {
             game->player = WHITE;
+        } else if (str_eq("-c", argv[i])) {
+            game->player = NONE;
         }
     }
 }
