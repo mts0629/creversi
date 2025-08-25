@@ -47,6 +47,7 @@ Black (X) turn >
 - `-b`: set a player to black (default)
 - `-w`: set a player to white
 - `-c`: play with COM vs COM mode
+- `-r`: output a game record as `record.txt`
 
 ## License
 

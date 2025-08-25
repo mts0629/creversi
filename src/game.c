@@ -15,6 +15,8 @@ typedef struct {
     Disk current;
     int num_valid_moves[3];
     int valid_moves[3][60];
+    bool record_game;
+    int record[60];
     Board board;
 } Game;
 
@@ -26,6 +28,7 @@ static inline bool str_eq(const char *s1, const char *s2) {
 // Parse commandline arguments
 static void parse_args(Game *game, const int argc, const char *argv[]) {
     game->player = BLACK;
+    game->record_game = false;
 
     for (int i = 1; i < argc; ++i) {
         if (str_eq("-b", argv[i])) {
@@ -34,6 +37,8 @@ static void parse_args(Game *game, const int argc, const char *argv[]) {
             game->player = WHITE;
         } else if (str_eq("-c", argv[i])) {
             game->player = NONE;
+        } else if (str_eq("-r", argv[i])) {
+            game->record_game = true;
         }
     }
 }
@@ -134,6 +139,8 @@ void play_game(const int argc, const char *argv[]) {
 
     init_game(&game);
 
+    int turn = 0;
+
     while (true) {
         update_valid_moves(&game);
 
@@ -197,8 +204,23 @@ void play_game(const int argc, const char *argv[]) {
 
         change_turn(&game);
 
+        if (game.record_game) {
+            game.record[turn] = index;
+            ++turn;
+        }
+
         rewind_cursor();
     }
 
     judge_game(&game);
+
+    if (game.record_game) {
+        FILE *fp = fopen("record.txt", "w");
+
+        for (int i = 0; i < 60; ++i) {
+            fprintf(fp, "%s", get_pos_str(game.record[i]));
+        }
+
+        fclose(fp);
+    }
 }
