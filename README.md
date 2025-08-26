@@ -48,6 +48,7 @@ Black (X) turn >
 - `-w`: set a player to white
 - `-c`: play with COM vs COM mode
 - `-r`: output a game record as `record.txt`
+- `-h`: show help
 
 ## License
 

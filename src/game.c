@@ -25,6 +25,15 @@ static inline bool str_eq(const char *s1, const char *s2) {
     return (strcmp(s1, s2) == 0);
 }
 
+static char *help_str =
+    "usage: %s [-b] [-w] [-c] [-r] [-h]\n"
+    "options:\n"
+    "    -b: set player's color to black (default)\n"
+    "    -w: set player's color to white\n"
+    "    -c: COM vs COM mode\n"
+    "    -r: output a game record (as './record.txt')\n"
+    "    -h: show this help\n";
+
 // Parse commandline arguments
 static void parse_args(Game *game, const int argc, const char *argv[]) {
     game->player = BLACK;
@@ -39,6 +48,9 @@ static void parse_args(Game *game, const int argc, const char *argv[]) {
             game->player = NONE;
         } else if (str_eq("-r", argv[i])) {
             game->record_game = true;
+        } else if (str_eq("-h", argv[i])) {
+            printf(help_str, argv[0]);
+            exit(EXIT_SUCCESS);
         }
     }
 }
